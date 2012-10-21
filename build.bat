@@ -1,0 +1,1 @@
+java -jar ./lib/compiler/compiler.jar --js src/Factory.js --js_output_file=dist/http.js

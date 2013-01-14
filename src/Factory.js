@@ -15,7 +15,42 @@ http.Factory = http.Factory || (function() {
 		    var xdr = new XDomainRequest();
 		    
 		    xdr.timeout = timeout;
-		    xdr.onload = onload;
+		    /**
+		     * Try this on IE9:
+		     * 
+		     * var x1 = new XDomainRequest();
+		     * x1.onprogress = function() {};
+		     * x1.onerror = function() {};
+		     * x1.ontimeout = function() {};
+		     * x1.onload = function() {};
+		     * x1.timeout = 60000;
+		     * x1.open("POST", "https://[domain]/[path]");
+		     * x1.send(JSON.stringify({}));
+		     * 
+		     * function ie9_bug() {
+		     *    var x2 = new XDomainRequest();
+		     *    x2.onprogress = function() {};
+		     *    x2.onerror = function() {};
+		     *    x2.ontimeout = function() {};
+		     *    x2.onload = function() {};
+		     *    x2.timeout = 60000;
+		     *    x2.open("POST", "https://[domain]/[path]");
+		     *    x2.send(JSON.stringify({}));
+		     * }
+		     * ie9_bug();
+		     * 
+		     * View the Network tab in the debug console and notice that the second call is
+		     * immediately aborted. If x2 is defined globally, everything works.
+		     * 
+		     * It appears that IE9 ignores the pending request and garbage-collects x2 when
+		     * the function returns. @see https://github.com/faye/faye/pull/98
+		     * 
+		     * The code below seems to workaround the bug without making xdr global.
+		     */
+		    xdr.onload = function() {
+		    	xdr.fix = true;
+		    	onload();
+		    };
 		    xdr.onerror = onerror;
 		    xdr.onprogress = onprogress;
 		    xdr.ontimeout = ontimeout;

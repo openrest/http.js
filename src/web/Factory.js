@@ -11,7 +11,7 @@ http.Factory = http.Factory || (function() {
 		var onprogress = params.onprogress || function(e){};
 		var ontimeout = params.ontimeout || function(e){};
 		
-		if (typeof(XDomainRequest) !== "undefined") { // IE
+		if (typeof(XDomainRequest) !== "undefined") { // IE8, IE9
 		    var xdr = new XDomainRequest();
 		    
 		    xdr.timeout = timeout;
@@ -59,35 +59,30 @@ http.Factory = http.Factory || (function() {
 		    xdr.setUserAgent = function(userAgent){};
 		    
 		    return xdr;
-		} else if (typeof(XMLHttpRequest) !== "undefined") { // All other modern browsers
-			var xhr = new XMLHttpRequest();
-			
-		    xhr.timeout = timeout;
-		    xhr.onload = onload;
-		    xhr.onerror = onerror;
-		    xhr.onprogress = onprogress;
-		    xhr.ontimeout = ontimeout;
-		    
-		    xhr.setUserAgent = function(userAgent){};
-		    
-			return xhr;
-		} else if (typeof(Ti) !== "undefined") { // Appcelerator Titanium
-			var client = Ti.Network.createHTTPClient({
-				timeout : timeout,
-				onload : onload,
-				onerror : onerror,
-				onprogress : onprogress,
-				ontimeout : ontimeout
-			});
-			
-		    client.setUserAgent = function(userAgent) {
-				client.setRequestHeader("User-Agent", userAgent);
-		    };
-
-			return client;
-		} else {
-			throw new Error("Could not find an HttpClient implementation.");
 		}
+		
+		// All other modern browsers
+		var xhr = new XMLHttpRequest();
+		
+	    xhr.onload = onload;
+	    xhr.onerror = onerror;
+	    xhr.onprogress = onprogress;
+	    xhr.ontimeout = ontimeout;
+	    
+	    xhr.setUserAgent = function(userAgent){};
+	    
+	    /**
+	     * IE10 throws InvalidStateError when timeout is set before open.
+	     * @see https://github.com/google/tracing-framework/issues/407
+	     */
+	   	var _open = xhr.open;
+	    xhr.open = function() {
+	    	var result = _open.apply(xhr, arguments);
+		    xhr.timeout = timeout;
+		    return result;
+	    };
+	    
+		return xhr;
 	};
 
 	return self;

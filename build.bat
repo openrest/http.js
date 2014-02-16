@@ -1,1 +1,3 @@
-java -jar ./lib/compiler/compiler.jar --js src/Factory.js --js_output_file=dist/http.js
+java -jar ./tools/compiler/compiler.jar --js src/web/*.js --js_output_file=dist/http-web.js
+java -jar ./tools/compiler/compiler.jar --js src/titanium/*.js --js_output_file=dist/http-titanium.js
+pause
